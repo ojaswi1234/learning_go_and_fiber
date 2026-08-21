@@ -6,7 +6,7 @@ import(
     "os"
     "github.com/gofiber/fiber/v2"
     "github.com/gofiber/fiber/v2/middleware/logger"
-    "github.com/jono/godotenv"
+    "github.com/joho/godotenv"
 )
 // this is not the end
 func setupRoutes(app *fiber.App){

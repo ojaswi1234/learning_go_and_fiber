@@ -1,0 +1,73 @@
+name: Build Go Application
+
+# Trigger the workflow on pushes and pull requests to the main branches
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GO111MODULE: "on"
+
+    steps:
+      # -------------------------------------------------
+      # 1️⃣ Checkout the repository
+      # -------------------------------------------------
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # -------------------------------------------------
+      # 2️⃣ Set up Go (use the latest stable version)
+      # -------------------------------------------------
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'   # you can change this to the version you need
+
+      # -------------------------------------------------
+      # 3️⃣ Cache Go modules to speed up subsequent runs
+      # -------------------------------------------------
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      # -------------------------------------------------
+      # 4️⃣ Install project dependencies
+      # -------------------------------------------------
+      - name: Install dependencies
+        run: go mod tidy
+
+      # -------------------------------------------------
+      # 5️⃣ Build the application
+      # -------------------------------------------------
+      - name: Build application
+        run: |
+          # Create a bin directory if it doesn't exist
+          mkdir -p ./bin
+          # Build the main package (adjust the path if your entrypoint differs)
+          go build -o ./bin/app ./api/main.go
+
+      # -------------------------------------------------
+      # 6️⃣ Run tests (optional but recommended)
+      # -------------------------------------------------
+      - name: Run tests
+        run: go test ./... -v
+
+      # -------------------------------------------------
+      # 7️⃣ Upload the built binary as an artifact
+      # -------------------------------------------------
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: go-binary
+          path: ./bin/app
